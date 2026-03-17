@@ -1,0 +1,512 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Türkiye Economic Indicators 2008–2024</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg:      #f5f3ee;
+    --surface: #ffffff;
+    --border:  rgba(0,0,0,0.10);
+    --text:    #1a1410;
+    --muted:   #888;
+    --accent:  #7a5c38;
+  }
+
+  html, body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    min-height: 100vh;
+  }
+
+  body {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 48px 32px 80px;
+  }
+
+  /* ── header ── */
+  .header {
+    width: 100%;
+    max-width: 1100px;
+    margin-bottom: 40px;
+    border-left: 3px solid var(--accent);
+    padding-left: 18px;
+    animation: fadeUp 0.6s ease both;
+  }
+  .eyebrow {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 8px;
+  }
+  h1 {
+    font-size: clamp(20px, 3.5vw, 32px);
+    font-weight: 300;
+    line-height: 1.25;
+    color: var(--text);
+  }
+  h1 em { font-style: normal; font-weight: 500; }
+  .subtitle {
+    margin-top: 8px;
+    font-size: 13px;
+    color: var(--muted);
+    line-height: 1.6;
+    max-width: 620px;
+  }
+
+  /* ── heatmap card ── */
+  .heatmap-wrap {
+    width: 100%;
+    max-width: 1100px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 24px 24px 20px;
+    box-shadow: 0 2px 16px rgba(0,0,0,0.06);
+    animation: fadeUp 0.6s ease 0.15s both;
+  }
+
+  .heatmap-layout {
+    display: grid;
+    grid-template-columns: 148px 1fr;
+  }
+
+  /* row labels */
+  .row-labels {
+    display: flex;
+    flex-direction: column;
+    padding-top: 30px;
+  }
+  .row-label {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    padding-right: 12px;
+    height: 70px;
+    font-family: 'DM Mono', monospace;
+    font-size: 10.5px;
+    font-weight: 500;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+    color: var(--muted);
+    gap: 7px;
+  }
+  .swatch {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  /* grid right */
+  .grid-right { display: flex; flex-direction: column; min-width: 0; }
+
+  /* year headers */
+  .year-headers {
+    display: grid;
+    height: 26px;
+    align-items: flex-end;
+    padding-bottom: 4px;
+  }
+  .year-lbl {
+    font-family: 'DM Mono', monospace;
+    font-size: 9px;
+    color: var(--muted);
+    text-align: center;
+    letter-spacing: 0.02em;
+  }
+  .year-lbl.emphasis {
+    color: var(--accent);
+    font-weight: 500;
+    font-size: 9.5px;
+  }
+
+  /* heatmap grid */
+  .heatmap-rows {
+    display: flex;
+    flex-direction: column;
+    border: 1px solid var(--border);
+    border-radius: 5px;
+    overflow: hidden;
+  }
+  .heatmap-row {
+    display: grid;
+    border-bottom: 1px solid rgba(0,0,0,0.06);
+  }
+  .heatmap-row:last-child { border-bottom: none; }
+
+  /* cell */
+  .cell {
+    height: 70px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    border-right: 1px solid rgba(0,0,0,0.07);
+    gap: 2px;
+    transition: transform 0.14s ease, box-shadow 0.14s ease;
+    position: relative;
+    z-index: 1;
+  }
+  .cell:last-child { border-right: none; }
+  .cell:hover {
+    transform: scaleX(1.06) scaleY(1.12);
+    z-index: 10;
+    box-shadow: 0 2px 14px rgba(0,0,0,0.20);
+  }
+  .cell .val {
+    font-family: 'DM Mono', monospace;
+    font-size: 10.5px;
+    font-weight: 500;
+    pointer-events: none;
+    line-height: 1;
+  }
+  .cell .yr {
+    font-family: 'DM Mono', monospace;
+    font-size: 8px;
+    pointer-events: none;
+    line-height: 1;
+  }
+
+  /* ── legend ── */
+  .legend-section {
+    width: 100%;
+    max-width: 1100px;
+    margin-top: 22px;
+    display: grid;
+    grid-template-columns: 148px 1fr;
+    animation: fadeUp 0.6s ease 0.25s both;
+  }
+  .legends {
+    display: flex;
+    gap: 24px;
+    flex-wrap: wrap;
+  }
+  .legend-item {
+    flex: 1;
+    min-width: 140px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .legend-lbl {
+    font-family: 'DM Mono', monospace;
+    font-size: 9px;
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    color: var(--muted);
+  }
+  .legend-bar { height: 7px; border-radius: 3px; }
+  .legend-ticks {
+    display: flex;
+    justify-content: space-between;
+    font-family: 'DM Mono', monospace;
+    font-size: 8.5px;
+    color: var(--muted);
+  }
+
+  /* ── annotations ── */
+  .annotations {
+    width: 100%;
+    max-width: 1100px;
+    margin-top: 28px;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 10px;
+    animation: fadeUp 0.6s ease 0.35s both;
+  }
+  .ann-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 7px;
+    padding: 11px 13px;
+  }
+  .ann-year {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    color: var(--accent);
+    letter-spacing: 0.08em;
+    margin-bottom: 4px;
+  }
+  .ann-text {
+    font-size: 11.5px;
+    color: var(--muted);
+    line-height: 1.5;
+  }
+
+  /* ── footnote ── */
+  .footnote {
+    width: 100%;
+    max-width: 1100px;
+    margin-top: 24px;
+    border-top: 1px solid var(--border);
+    padding-top: 14px;
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    color: #aaa;
+    line-height: 1.7;
+    animation: fadeUp 0.6s ease 0.45s both;
+  }
+
+  /* ── tooltip ── */
+  #tooltip {
+    position: fixed;
+    background: #fff;
+    border: 1px solid rgba(0,0,0,0.12);
+    border-radius: 8px;
+    padding: 11px 14px;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.12s;
+    z-index: 999;
+    min-width: 190px;
+    box-shadow: 0 6px 24px rgba(0,0,0,0.10);
+    font-size: 12px;
+  }
+  .tt-year {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    font-weight: 500;
+    color: var(--accent);
+    letter-spacing: 0.08em;
+    margin-bottom: 7px;
+  }
+  .tt-row {
+    display: flex;
+    justify-content: space-between;
+    gap: 14px;
+    padding: 1px 0;
+    color: var(--muted);
+  }
+  .tt-val {
+    font-family: 'DM Mono', monospace;
+    font-weight: 500;
+    color: var(--text);
+  }
+  .tt-bar {
+    margin-top: 2px;
+    margin-bottom: 5px;
+    height: 3px;
+    border-radius: 2px;
+    background: #eee;
+    overflow: hidden;
+  }
+  .tt-fill { height: 100%; border-radius: 2px; }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(12px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="eyebrow">Data Visualisation · Türkiye · 2008–2024</div>
+  <h1>How have <em>GDP</em>, <em>Unemployment</em> &amp; <em>Higher Education</em> evolved over time?</h1>
+  <p class="subtitle">Colour intensity encodes relative magnitude — each row normalised independently to its own min–max. Hover any cell for details.</p>
+</div>
+
+<div class="heatmap-wrap">
+  <div class="heatmap-layout">
+    <div class="row-labels" id="rowLabels"></div>
+    <div class="grid-right">
+      <div class="year-headers" id="yearHeaders"></div>
+      <div class="heatmap-rows" id="heatmapRows"></div>
+    </div>
+  </div>
+</div>
+
+<div class="legend-section">
+  <div></div>
+  <div class="legends" id="legends"></div>
+</div>
+
+<div class="annotations" id="annotations"></div>
+
+<div class="footnote">
+  Note: All values normalised making their min = 1.00. Each row uses its own min–max scale — colour intensity cannot be compared across rows. Source: https://www.tuik.gov.tr/.
+</div>
+
+<div id="tooltip">
+  <div class="tt-year" id="ttYear"></div>
+  <div id="ttBody"></div>
+</div>
+
+<script>
+const YEARS = [2008,2009,2010,2011,2012,2013,2014,2015,2016,2017,2018,2019,2020,2021,2022,2023,2024];
+
+const SERIES = [
+  {
+    label: 'Higher Education',
+    swatch: '#1a6fbd',
+    loRgb: [220,236,252],
+    hiRgb: [20, 90, 170],
+    data: [1.00,1.21,1.26,1.50,1.59,1.78,1.95,2.16,2.28,2.33,2.42,2.51,2.68,2.80,2.91,3.00,3.08]
+  },
+  {
+    label: 'Unemployment',
+    swatch: '#b83020',
+    loRgb: [252,228,224],
+    hiRgb: [170, 35,  20],
+    data: [1.18,1.56,1.33,1.08,1.00,1.07,1.19,1.24,1.31,1.32,1.32,1.65,1.58,1.44,1.26,1.13,1.05]
+  },
+  {
+    label: 'GDP per Capita',
+    swatch: '#1a7a3c',
+    loRgb: [218,244,228],
+    hiRgb: [18, 110,  50],
+    data: [1.24,1.03,1.21,1.29,1.34,1.43,1.38,1.25,1.24,1.22,1.10,1.06,1.00,1.13,1.24,1.52,1.81]
+  }
+];
+
+const ANNOTATIONS = [
+  { year: 2009, text: 'Financial crisis — unemployment peaks, GDP contracts sharply.' },
+  { year: 2013, text: 'Mid-decade GDP growth peaks as Türkiye expands.' },
+  { year: 2019, text: 'Currency crisis — unemployment surges to second-highest.' },
+  { year: 2020, text: 'COVID-19 — GDP hits its lowest indexed value.' },
+  { year: 2024, text: 'Strong GDP rebound; education reaches historic high.' },
+];
+
+// normalise
+SERIES.forEach(s => {
+  s.min  = Math.min(...s.data);
+  s.max  = Math.max(...s.data);
+  s.norm = s.data.map(v => (v - s.min) / (s.max - s.min));
+});
+
+function lerp(lo, hi, t) {
+  return [
+    Math.round(lo[0] + t * (hi[0] - lo[0])),
+    Math.round(lo[1] + t * (hi[1] - lo[1])),
+    Math.round(lo[2] + t * (hi[2] - lo[2]))
+  ];
+}
+function rgb(a)  { return `rgb(${a[0]},${a[1]},${a[2]})`; }
+function lum(a)  { return 0.299*a[0] + 0.587*a[1] + 0.114*a[2]; }
+
+// ── Year headers
+const yhEl = document.getElementById('yearHeaders');
+yhEl.style.gridTemplateColumns = `repeat(${YEARS.length},1fr)`;
+YEARS.forEach(yr => {
+  const d = document.createElement('div');
+  d.className = 'year-lbl' + ((yr % 4 === 0 || yr === 2009 || yr === 2019 || yr === 2024) ? ' emphasis' : '');
+  d.textContent = yr;
+  yhEl.appendChild(d);
+});
+
+// ── Row labels
+const rlEl = document.getElementById('rowLabels');
+SERIES.forEach(s => {
+  const d = document.createElement('div');
+  d.className = 'row-label';
+  d.innerHTML = `${s.label}<span class="swatch" style="background:${s.swatch}"></span>`;
+  rlEl.appendChild(d);
+});
+
+// ── Cells
+const hrEl = document.getElementById('heatmapRows');
+SERIES.forEach((s, si) => {
+  const row = document.createElement('div');
+  row.className = 'heatmap-row';
+  row.style.gridTemplateColumns = `repeat(${YEARS.length},1fr)`;
+
+  YEARS.forEach((yr, ci) => {
+    const t   = s.norm[ci];
+    const col = lerp(s.loRgb, s.hiRgb, t);
+    const dark = lum(col) < 150;
+    const textAlpha = dark ? '0.92' : '0.70';
+    const subAlpha  = dark ? '0.55' : '0.40';
+
+    const cell = document.createElement('div');
+    cell.className = 'cell';
+    cell.style.backgroundColor = rgb(col);
+
+    const valEl = document.createElement('span');
+    valEl.className = 'val';
+    valEl.style.color = dark ? `rgba(255,255,255,${textAlpha})` : `rgba(0,0,0,${textAlpha})`;
+    valEl.textContent = s.data[ci].toFixed(2);
+
+    const yrEl = document.createElement('span');
+    yrEl.className = 'yr';
+    yrEl.style.color = dark ? `rgba(255,255,255,${subAlpha})` : `rgba(0,0,0,${subAlpha})`;
+    yrEl.textContent = yr;
+
+    cell.appendChild(valEl);
+    cell.appendChild(yrEl);
+    cell.addEventListener('mouseenter', e => showTip(e, ci));
+    cell.addEventListener('mousemove', moveTip);
+    cell.addEventListener('mouseleave', hideTip);
+    row.appendChild(cell);
+  });
+
+  hrEl.appendChild(row);
+});
+
+// ── Legends
+const legEl = document.getElementById('legends');
+SERIES.forEach(s => {
+  const steps = 50;
+  const stops = Array.from({length: steps + 1}, (_,i) => {
+    const t = i / steps;
+    return `${rgb(lerp(s.loRgb, s.hiRgb, t))} ${(t*100).toFixed(0)}%`;
+  }).join(',');
+
+  const item = document.createElement('div');
+  item.className = 'legend-item';
+  item.innerHTML = `
+    <div class="legend-lbl">${s.label}</div>
+    <div class="legend-bar" style="background:linear-gradient(to right,${stops})"></div>
+    <div class="legend-ticks"><span>${s.min.toFixed(2)}× low</span><span>${s.max.toFixed(2)}× high</span></div>
+  `;
+  legEl.appendChild(item);
+});
+
+// ── Annotations
+const annEl = document.getElementById('annotations');
+ANNOTATIONS.forEach(a => {
+  const card = document.createElement('div');
+  card.className = 'ann-card';
+  card.innerHTML = `<div class="ann-year">▸ ${a.year}</div><div class="ann-text">${a.text}</div>`;
+  annEl.appendChild(card);
+});
+
+// ── Tooltip
+const tip   = document.getElementById('tooltip');
+const tipYr = document.getElementById('ttYear');
+const tipBd = document.getElementById('ttBody');
+
+function showTip(e, ci) {
+  tipYr.textContent = YEARS[ci];
+  let html = '';
+  SERIES.forEach(s => {
+    const t   = s.norm[ci];
+    const col = lerp(s.loRgb, s.hiRgb, t);
+    html += `
+      <div class="tt-row"><span>${s.label}</span><span class="tt-val">${s.data[ci].toFixed(2)}×</span></div>
+      <div class="tt-bar"><div class="tt-fill" style="width:${(t*100).toFixed(1)}%;background:${rgb(col)}"></div></div>`;
+  });
+  tipBd.innerHTML = html;
+  tip.style.opacity = '1';
+  moveTip(e);
+}
+function moveTip(e) {
+  const x = e.clientX + 14, y = e.clientY - 8;
+  tip.style.left = (x + tip.offsetWidth  > window.innerWidth  ? x - tip.offsetWidth  - 20 : x) + 'px';
+  tip.style.top  = (y + tip.offsetHeight > window.innerHeight ? y - tip.offsetHeight - 10 : y) + 'px';
+}
+function hideTip() { tip.style.opacity = '0'; }
+</script>
+</body>
+</html>
